@@ -86,6 +86,12 @@ Load these skills (read their SKILL.md) when working on:
     - **100% Centralized i18n**: Rule #14 applies everywhere. Zero hardcoded user-facing strings or inline ternaries in JSX. All strings must be defined in `frontend/i8n/vi/` and `frontend/i8n/en/` and consumed via `useTranslations(namespace)`.
     - **Explicit Loading & Empty States**: Every async query, tab, page, table, and modal MUST render polished loading states (skeletons/spinners with contextual text) and informative empty states (using `@/components/ui/EmptyState` with icon, title, description, and primary CTA button).
 
+19. **Occupancy-Centric Tenancy & Flexible Invoicing**:
+    - **Contract-Free Tenancy**: Tenancy is rooted in Room Occupancy (`RoomOccupant`). Tenants can reside, view room/service details, submit meter readings, and pay monthly invoices via PayOS based on active `RoomOccupant` status without requiring a formal `Contract`.
+    - **Contracts as On-Demand Legal Instruments**: Written contracts (`Contract`) are optional, on-demand legal agreements primarily used for official PDF export, police temporary residence registration (đăng ký tạm trú / mẫu CT01, KT3), and legal dispute resolution.
+    - **Configurable Boarding House Payment Date**: Boarding houses feature a configurable `monthlyPaymentDate` (integer 1–31, default: `5`), selected during onboarding/setup and editable in landlord settings. If a room has no contract, billing defaults to this property payment date. If an active contract specifies a `monthlyPaymentDate`, the contract date applies.
+    - **Default Room Rent**: For rooms without contracts, invoice rent amount defaults to `room.roomType.price`. Landlords can adjust or discount this line item directly on the invoice.
+
 ## Module Breakdown
 
 ```

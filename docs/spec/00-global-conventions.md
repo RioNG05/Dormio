@@ -50,6 +50,12 @@
      ```
      Mirror this check at the application/service layer too (don't rely on the DB constraint alone to surface a clean error message to the caller) — validate before insert, not just let the DB reject it.
 - **Audit logging**: any mutation to `Contract`, `Deposit`, `Payment`, `Invoice`, `EmployeeAssignment`, `Attendance`, `UserSubscription` must write an `AuditLog` row inside the same transaction as the mutation. Implement via a Prisma middleware/interceptor.
+- **Occupancy-Centric Tenancy & Room-Centric Billing**:
+  - **Contract-Free Tenancy**: Tenancy is rooted in Room Occupancy (`RoomOccupant`). Tenants can reside, view room and utility details, submit meter readings, and pay monthly invoices via PayOS based on active `RoomOccupant` status without requiring a formal `Contract`.
+  - **Contracts as On-Demand Legal Instruments**: Written contracts (`Contract`) are optional, on-demand legal agreements primarily used for official PDF export, police temporary residence registration (đăng ký tạm trú / mẫu CT01, KT3), and legal dispute resolution.
+  - **Configurable Property Payment Date**: Every `BoardingHouse` features a `monthlyPaymentDate` (`Int`, range 1–31, default: `5`), selected during onboarding/setup (`/landlord/setup`) and editable in landlord settings (`/landlord/settings`). When a room has no contract, billing defaults to this property payment date. If an active contract exists with a specified `monthlyPaymentDate`, the contract date applies.
+  - **Default Room Rent**: For rooms without contracts, invoice rent amount defaults to `room.roomType.price`. Landlords can adjust or discount this line item directly on the invoice.
+  - **Equal Co-tenancy**: All active occupants of a room share equal rights and permissions (no `isPrimary`). All receive billing reminders/notifications and can pay room invoices via PayOS.
 - **Async side effects**: SMS/Zalo/Email dispatch and payment-gateway calls go through a job queue (e.g. BullMQ), never synchronously inside the HTTP request that creates the triggering record.
 
 ---
@@ -90,6 +96,7 @@ These model a state that only exists *after* some later event — as written, Pr
 | `OtpCode` model (new table: `id`, `userId`, `codeHash`, `purpose`, `expiresAt`, `verifiedAt`, `attemptCount`, `createdAt`) | UC-AUTH-03 — first-login SMS verification for accounts created via the manual phone-entry flow. |
 | `Grievance.resolutionNote` (nullable text) | UC-A-04 — `GrievenceStatus` already includes `rejected`, but there's no field to record *why* something was resolved or rejected. |
 | `AiConversation.boardingHouseId` → make nullable | UC-L-24's cross-property AI strategy reports have no single `boardingHouseId` to attach to. |
+| `BoardingHouse.monthlyPaymentDate` (Int, default 5) | UC-L-01 / UC-L-03 — property-level recurring billing due date (1–31), configurable during setup and in settings. Defaults to 5 when omitted. |
 
 ### C. Data-type / design concerns to flag to the schema owner
 
@@ -97,13 +104,13 @@ These model a state that only exists *after* some later event — as written, Pr
 |---|---|
 | `InvoiceItem.amount` (`Int`) | Should be `Decimal` — a metered utility line item can have fractional cost; `Int` truncates it and breaks `SUM` reconciliation against `Invoice.totalAmount`. |
 | `Expense.roomId` (required) | No way to record a property-wide expense not tied to one room (e.g. a shared-area repair). |
-| `TenantContract.contractId` (required) | The business description mentions landlords can "add someone to a room without a contract" — as written, that's not possible without a `Contract` row existing (see the footnote in `01-bhms-landlord.md` UC-L-04 Flow B). Confirm whether every occupancy really does need a backing `Contract` row (our working assumption), or whether a lighter-weight "occupant without contract" concept needs to be introduced.
+| `TenantContract.contractId` (required) | **RESOLVED**: Tenancy is fundamentally rooted in Room Occupancy (`RoomOccupant`), not contracts. `RoomOccupant` allows tenants to reside, view room details, submit meter readings, and pay invoices via PayOS without any `Contract`. Written contracts (`Contract`) are optional on-demand legal instruments for police registration (CT01/KT3) or dispute export (UC-L-15). `Invoice.contractId` is optional/nullable, linking directly to `Invoice.roomId`.
 
 ---
 
 ## Role Model — summary (full detail in `07-auth-and-roles.md`)
 
-`User.role` (`leasing_agent | tenant | employee | landlord | admin`) is a **display-only "highest achieved role" label**. It is never the sole basis for a permission check except for `admin`. Every other capability is derived from a relationship: `BoardingHouse.ownerId` (landlord-for-property), active `EmployeeAssignment` (employee-for-property), active `TenantContract` (tenant-for-property), or simply being authenticated at all (leasing-agent-level capabilities). Read `07-auth-and-roles.md` before writing any guard, controller, or authorization check anywhere in the codebase — it also covers the important Posting Capability Split between Leasing Agent and Landlord.
+`User.role` (`leasing_agent | tenant | employee | landlord | admin`) is a **display-only "highest achieved role" label**. It is never the sole basis for a permission check except for `admin`. Every other capability is derived from a relationship: `BoardingHouse.ownerId` (landlord-for-property), active `EmployeeAssignment` (employee-for-property), active `RoomOccupant` or active `TenantContract` (tenant-for-property), or simply being authenticated at all (leasing-agent-level capabilities). Read `07-auth-and-roles.md` before writing any guard, controller, or authorization check anywhere in the codebase — it also covers the important Posting Capability Split between Leasing Agent and Landlord.
 
 ---
 

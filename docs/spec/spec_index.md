@@ -40,7 +40,7 @@
 | UC-L-02 | Bulk Generate Rooms | Free |
 | UC-L-03 | Create/Edit Single Room | Free |
 | UC-L-04 | Generate Rental Contract (External Source Flow) | Free |
-| UC-L-04b | Convert Platform Deposit into Contract | Free |
+| UC-L-04B | Add Occupant Without Contract (RoomOccupant) | Free |
 | UC-L-05 | View Room Dashboard | Free |
 | UC-L-06 | Automated QR Payment Collection | Free |
 | UC-L-07 | View Payment History | Free |

@@ -268,6 +268,7 @@ Every frontend page, layout, modal, and component MUST strictly satisfy the foll
 - Do NOT throw ad-hoc domain errors without a typed `BusinessErrorCode` in backend, and do NOT parse client error strings with `.includes(...)` in frontend — always use `BusinessException` and `resolveErrorMessage()`.
 - Do NOT use `isPrimary` on tenant contracts — all co-tenants share equal rights and permissions.
 - Do NOT allow contract creation for rooms without active occupants or with unassociated phone numbers — enforce Room-First Contract Creation.
+- Do NOT block tenants from viewing room details, submitting meter readings, or paying invoices via PayOS when they do not have a formal Contract — enforce Occupancy-Centric Tenancy via `RoomOccupant`.
 - Do NOT build custom modal overlays with raw `fixed inset-0` HTML divs — always use `<Modal>` from `@/components/ui/Modal`.
 - Do NOT build custom empty states with raw divs — always use `<EmptyState>` from `@/components/ui/EmptyState`.
 - Do NOT hardcode colors or ignore dark mode — always use semantic design tokens (`bg-card`, `bg-surface`, `text-foreground`, `border-line`, etc.).

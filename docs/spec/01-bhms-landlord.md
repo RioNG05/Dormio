@@ -7,8 +7,8 @@
 ### UC-L-01 — Initialize Property Profile
 **Tier:** Free · **Models:** `BoardingHouse`, `Service`, `RoomType`
 
-1. Landlord submits `name`, structured address fields (`country`, `province`, `city`, `district`, `ward`, `street`, `houseNumber`), `description`, `totalFloor`, `builtAt`, plus arrays of `{ name, unit, price, isMetered }` for services and `{ name, description }` for room types.
-2. Create `BoardingHouse(ownerId = current_user.id, status = 'active')`.
+1. Landlord submits `name`, structured address fields (`country`, `province`, `city`, `district`, `ward`, `street`, `houseNumber`), `description`, `totalFloor`, `builtAt`, `monthlyPaymentDate` (optional integer 1–31, defaults to 5), plus arrays of `{ name, unit, price, isMetered }` for services and `{ name, description }` for room types.
+2. Create `BoardingHouse(ownerId = current_user.id, status = 'active', monthlyPaymentDate = monthlyPaymentDate ?? 5)`.
 3. Bulk-insert `Service` rows with `boardingHouseId` set to this property. System-default services (if any convention for "global" services is added later) are a separate concern — do not clone rows, `RoomService` is what attaches a service to a specific room (UC-L-02/03).
 4. Bulk-insert `RoomType` rows scoped to this `boardingHouseId`.
 
@@ -34,11 +34,17 @@
 
 Direct insert/update on `Room` (`roomNumber`, `floor`, `area`, `maxOccupants`, `roomTypeId`, rent price if stored per-room, `image_url`). On creation, auto-attach relevant `Service` rows as `RoomService`. Landlord can detach a service by deleting its `RoomService` row — note `RoomService` has no `isActive`/soft-toggle field in the current schema, so removing a service from a room is a hard delete of that join row; if past invoices need to preserve historical pricing for a since-removed service, that data must already live on the `InvoiceItem` row (`unitPrice`, `quantity` snapshotted at generation time), not be re-derived from `RoomService` later.
 
+**Boarding House Settings:** Encompasses property settings (`/landlord/settings`) where landlords can update property profile details, including the recurring billing day `BoardingHouse.monthlyPaymentDate` (integer 1–31, default 5).
+
 ---
 
 ### UC-L-04 — Generate Rental Contract
 **Tier:** Free · **Models:** `Contract`, `TenantContract`, `Deposit`, `UserIdentification`, `ContractDocument`, `User`
 
+> **Architectural Note on Contracts**:
+> In Dormio, written contracts (`Contract`) are **optional, on-demand legal instruments**. Tenants can reside in rooms as `RoomOccupant`, view room details, submit meter readings, and pay monthly invoices via PayOS without needing a formal contract.
+> The contract creation flows below (Flow A / Flow B) are used when either party requests an official signed legal agreement, or when the landlord needs to export contract documentation (UC-L-15) for police temporary residence registration (mẫu CT01/KT3) or legal compliance.
+>
 > There are two distinct flows here, triggered by different entry points in the UI. Both ultimately produce an `active` `Contract`, but the **landlord never manually creates a `Deposit` row in Flow A** — it already exists from UC-PU-04 before the landlord ever opens this screen. See `07-auth-and-roles.md` for the role model and the shared user-onboarding helper referenced below.
 
 ---
@@ -86,14 +92,16 @@ This flow starts in `05-bhrp-platform-user.md` (UC-PU-04: tenant creates `UserId
 ### UC-L-04B — Thêm khách thuê vào phòng không cần hợp đồng (RoomOccupant)
 **Tier:** Free · **Models:** `RoomOccupant`, `User`, `Room`
 
-1. **Quick-Add Flow:** Landlord clicks "Thêm khách thuê" on Customers tab or in Contract Creation Wizard.
-2. Enter Phone Number:
+1. **Primary Tenancy Flow:** Tenants do NOT require a formal contract to reside in a room, submit utility meter readings, receive monthly invoices, or pay via PayOS. Adding an occupant directly creates an active `RoomOccupant`.
+2. **Quick-Add Flow:** Landlord clicks "Thêm khách thuê" on Customers tab, Room details, or Contract Creation Wizard.
+3. **Enter Phone Number:**
    - If phone already exists in this boarding house: Reject with warning `TENANT_ALREADY_IN_HOUSE`.
    - If phone exists in Dormio system (different property or registered): Autofill tenant name, lock name input.
    - If phone does not exist in system: Prompt landlord to enter full name. System auto-provisions a `User(phoneNumber, fullName, role='tenant', mustChangePassword=true, defaultPassword='88888888')`.
-3. Landlord selects Room (or prefilled).
-4. System creates `RoomOccupant(boardingHouseId, roomId, tenantId, status='active', joinedAt=NOW())`.
-5. Room status updates to `occupied` if currently vacant.
+4. Landlord selects Room (or prefilled).
+5. System creates `RoomOccupant(boardingHouseId, roomId, tenantId, status='active', joinedAt=NOW())`.
+6. Room status updates to `occupied` if currently vacant.
+7. **Immediate Tenant Capabilities:** The tenant can immediately log in (using default password `88888888`), update their password, view room details, submit monthly utility meter readings (UC-T-03), and pay monthly invoices via PayOS (UC-T-04) without waiting for any written contract.
 
 ---
 
@@ -118,29 +126,34 @@ Room
 ### UC-L-06 — Automated QR Payment Collection
 **Tier:** Free · **Tech:** VietQR / bank webhook · **Models:** `Invoice`, `InvoiceItem`, `Payment`, `MeterReading`, `Notification`
 
-> **This flow's ordering changed from earlier drafts**: `Invoice` is no longer created blindly on the billing day. Per the confirmed business rule, the tenant must submit utility meter readings **first**; only once those are in does the system compute the final total and create the `Invoice` (with `totalAmount` already set — there is no "draft/empty invoice" state). This UC is split into three parts below; UC-T-03/UC-T-04 in `03-bhms-tenant.md` are the tenant-facing counterparts of parts 2–3 and should link back here rather than duplicating the generation logic.
+> **Occupancy-Centric Billing Flow**:
+> Monthly billing evaluates all **occupied rooms** (`Room.status = 'occupied'`) or rooms with active contracts. A formal contract is not required.
+> - **Payment Due Date**: Resolved from `Contract.monthlyPaymentDate` if an active contract exists; otherwise defaults to `BoardingHouse.monthlyPaymentDate` (default 5, configurable 1–31 in setup & settings).
+> - **Room Rent Price**: If an active contract exists, rent is determined by `Contract.rentPrice` and its `rentPaymentCycle`. If no contract exists, rent defaults to `room.roomType.price`. Landlords can adjust or discount this line item directly on the invoice.
+> - **Equal Co-tenancy**: All active `RoomOccupant`s in the room have equal rights to receive reminders and pay invoices via PayOS.
+> - **Meter-First Ordering**: If the room has metered services, meter readings must be recorded before final invoice generation (see UC-T-03 / UC-L-09).
 
 **Part 1 — Reminders (cron, daily):**
-1. For each `Contract WHERE status='active'`, compute days until `monthlyPaymentDate` this cycle.
-2. **5 days before**: `Notification(receiverId=<tenant>, type='billing_reminder')`, dispatched via Zalo/SMS/Email (async job).
+1. For each occupied room (`Room.status = 'occupied'` or active contract), determine its effective monthly payment day:
+   - Use `Contract.monthlyPaymentDate` if contract exists; otherwise use `BoardingHouse.monthlyPaymentDate` (default 5).
+   - Compute days remaining until the payment day for the current cycle.
+2. **5 days before**: Send `Notification(type='billing_reminder', content='sắp đến hạn đóng tiền trọ')` to all active occupants (`RoomOccupant`) in the room (dispatched async).
 3. **On the due date itself**:
    - Check whether the room has any `RoomService` (active, joined `Service.status='active'`) where `Service.isMetered=true`.
    - **No metered services** → skip straight to Part 3 (generate the invoice immediately — nothing to wait for).
-   - **Has metered services** → send `Notification(type='billing_due', content='cần nhập chỉ số điện nước')` and stop here. **No `Invoice` row is created at this point.** The presence/absence of an `Invoice` for this billing cycle is itself the signal of "awaiting tenant meter input" — no separate status field is needed for this waiting state.
+   - **Has metered services** → send `Notification(type='billing_due', content='cần nhập chỉ số điện nước')` to all active occupants of the room. **No `Invoice` row is created at this point.**
 
 **Part 2 — Tenant submits meter readings (see UC-T-03 for the full OCR flow):**
 1. Tenant uploads a photo per metered `Service` in their room → `MeterReading(roomId, serviceId, imageUrl, readingValue=<OCR result>, invoiceId=NULL)`.
-2. Tenant reviews/corrects the OCR value, confirms.
-3. Once **every** active metered `RoomService` for the room has a corresponding `MeterReading WHERE invoiceId IS NULL` created since the last invoice, proceed to Part 3. (Query: `COUNT(RoomService WHERE roomId=X AND service.isMetered=true AND service.status='active')` must equal `COUNT(DISTINCT serviceId FROM MeterReading WHERE roomId=X AND invoiceId IS NULL)`.)
+2. Tenant reviews/corrects the reading value and confirms.
+3. Once **every** active metered `RoomService` for the room has a corresponding `MeterReading WHERE invoiceId IS NULL` created since the last invoice, proceed to Part 3.
 
 **Part 3 — Generate the Invoice (triggered by Part 1's "no metered services" branch, or by Part 2 step 3):**
-1. Determine whether a rent line item applies this cycle, based on `Contract.rentPaymentCycle`:
-   - `monthly` → always include.
-   - `quarterly` → include only if the number of full months since `Contract.startDate` is a multiple of 3.
-   - `biannual` → multiple of 6. `yearly` → multiple of 12.
-   - `upfront` → **never** include here — upfront rent is a one-time `Payment(contractId=...)` made at contract creation, not a recurring `InvoiceItem` (see the note on `rentPaymentCycle='upfront'` in the schema conventions).
-2. Build `InvoiceItem` rows: one for rent if applicable (`serviceId=NULL`, `amount=Contract.rentPrice`), one per active `RoomService` — metered services read `amount = MeterReading.readingValue × Service.price` from the just-confirmed reading; flat services use `Service.price` directly.
-3. Create `Invoice(roomId, contractId, status='unpaid', dueDate=<this cycle's monthlyPaymentDate>, totalAmount=SUM(InvoiceItem.amount))`.
+1. Determine rent line item:
+   - **Room has active `Contract`**: check `rentPaymentCycle` (`monthly` → always include; `quarterly` / `biannual` / `yearly` → if cycle matches; `upfront` → omitted). Rent amount = `Contract.rentPrice`.
+   - **Room has NO contract**: always include monthly rent defaulting to `room.roomType.price`.
+2. Build `InvoiceItem` rows: one for rent if applicable (`serviceId=NULL`, `amount=rentPrice`), plus one per active `RoomService` — metered services read `amount = MeterReading.readingValue × Service.price`; flat services use `Service.price` directly.
+3. Create `Invoice(roomId, contractId = contract?.id ?? NULL, status='unpaid', dueDate=<this cycle's payment date>, totalAmount=SUM(InvoiceItem.amount))`.
 4. **Link the consumed readings**: `UPDATE MeterReading SET invoiceId = <new invoice id> WHERE id IN (<the readings used in step 2>)` — this both marks them as "spent" (so the next cycle's query in Part 2 step 3 doesn't double-count them) and gives a permanent audit trail of which reading justified which invoice line.
 5. Generate a VietQR string with `Invoice.totalAmount` locked (non-editable).
 6. On bank webhook confirming transfer: create `Payment(invoiceId=..., type='charge', status='success', amount=Invoice.totalAmount, method='banking', transactionRef=<bank ref>)`, set `Invoice.status='paid'`.
@@ -224,6 +237,8 @@ Query `Deposit WHERE boardingHouseId = ... ORDER BY createdAt desc`, joined `Roo
 
 ### UC-L-15 — Export Contracts
 **Tier:** Plus
+
+> **Purpose**: Contracts in Dormio are created on-demand as official legal instruments. Exporting contracts as PDF documents allows landlords and tenants to print or submit them to local police/authorities (Công an phường/xã) for temporary residence registration (đăng ký tạm trú / mẫu CT01, KT3) and official legal compliance.
 
 Read `Contract` + `TenantContract` (joined `User`) + `Room` + `Deposit` (via `contractId`) → render via a server-side template (headless Chromium → PDF, or a `.docx` templater). Store the output as a new `ContractDocument(contractId, url)` row — support both the direct-print trigger and the downloadable-file trigger from the same rendered HTML template so the two code paths never drift apart.
 

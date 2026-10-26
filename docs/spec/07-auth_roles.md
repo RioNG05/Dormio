@@ -16,7 +16,7 @@
 |---|---|
 | Guest abilities (browse, search) | No auth required at all |
 | Leasing Agent abilities (post listings with no room link, chat, buy post credits) | `isAuthenticated` — any logged-in `User`, regardless of `role` |
-| Tenant abilities (view portal, deposit, grievance) for **a specific property** | `TenantContract WHERE tenantId = user.id AND contract.status = 'active'` joined to that `Contract.room.boardingHouseId` |
+| Tenant abilities (view portal, invoices, meter readings, grievances, room details) for **a specific property** | Active `RoomOccupant` (`RoomOccupant WHERE tenantId = user.id AND status = 'active'`) OR active `TenantContract` (`TenantContract WHERE tenantId = user.id AND contract.status = 'active'`) joined to `Room.boardingHouseId` |
 | Employee abilities (schedule, check-in/out) for **a specific property** | `EmployeeAssignment WHERE employee.userId = user.id AND boardingHouseId = X AND status = 'active'` |
 | Landlord abilities (manage a property, **and** post listings linked to their own rooms) for **a specific property** | `BoardingHouse WHERE id = X AND ownerId = user.id` |
 | Admin abilities (global) | `user.role === 'admin'` — this is the one case where the flat field IS authoritative, since Admin is a genuinely global, non-scoped, non-overlapping grant |
@@ -25,7 +25,7 @@
 
 **When does `User.role` actually get updated, then?** Only to reflect the *highest* capability the person has ever reached, in this fixed order: `leasing_agent < tenant < employee < landlord`, with `admin` set only by another Admin (never a self-service transition). Concretely:
 - On successful registration: `role = 'leasing_agent'`.
-- The moment a `TenantContract` is created for a user whose current `role = 'leasing_agent'`: bump `role = 'tenant'`.
+- The moment a `RoomOccupant(status='active')` or `TenantContract` is created for a user whose current `role = 'leasing_agent'`: bump `role = 'tenant'`. Auto-provisioned tenants (UC-L-04B) start directly with `role = 'tenant'`.
 - The moment an `EmployeeAssignment` is created for a user whose current `role` is `'leasing_agent'` or `'tenant'`: bump `role = 'employee'`.
 - The moment a `BoardingHouse` is successfully created with `ownerId = user.id`: bump `role = 'landlord'` **regardless of prior role** (`landlord` outranks `employee`/`tenant` in the display hierarchy — this only affects which dashboard they land on by default, it never revokes their Tenant or Employee capabilities, which remain fully queryable via the relation tables above).
 - Never downgrade `role` automatically (e.g. a `TenantContract` ending doesn't revert `role` back to `leasing_agent`) — it's a "highest ever reached" marker, not a live state machine.

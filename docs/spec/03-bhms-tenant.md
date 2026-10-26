@@ -1,6 +1,10 @@
 # Module 1 — BHMS · Actor: Tenant (Người thuê trọ)
 
 > See `00-overview-and-conventions.md` for global rules.
+>
+> **Occupancy-Centric Tenancy Architecture**:
+> Tenants gain full access to the tenant portal, room details, utility meter submissions, and monthly invoice payments via an active **`RoomOccupant`** record (`status = 'active'`) or an active `TenantContract`.
+> A formal written contract (`Contract`) is **NOT** a prerequisite for living in the room or paying rent. Contracts are optional on-demand legal instruments used when landlord or tenant requires an official signed document (e.g. for police temporary residence registration / mẫu CT01, KT3).
 
 ---
 
@@ -14,8 +18,8 @@ Triggered inside the same transaction as UC-L-04 Flow B step 10, **or** UC-AUTH-
 ### UC-T-02 — Receive Billing Reminder & Due Notifications
 **Tier:** Free
 
-Two distinct notifications, both triggered by UC-L-06 Part 1's daily cron (`01-bhms-landlord.md`):
-1. **5 days before `monthlyPaymentDate`**: `Notification(type='billing_reminder', content=<"sắp đến hạn đóng tiền trọ">)`.
+Two distinct notifications, both triggered by UC-L-06 Part 1's daily cron (`01-bhms-landlord.md`), sent to all active occupants (`RoomOccupant`) of the room:
+1. **5 days before the monthly payment date** (resolved from `Contract.monthlyPaymentDate` if contract exists, or `BoardingHouse.monthlyPaymentDate` [default: 5]): `Notification(type='billing_reminder', content=<"sắp đến hạn đóng tiền trọ">)`.
 2. **On the due date**: `Notification(type='billing_due', content=<"cần nhập chỉ số điện nước" if the room has metered services, else "hóa đơn đã sẵn sàng">)`. Note this second notification does **not** always mean an `Invoice` already exists — see UC-L-06 Part 1: if the room has metered services, the tenant must complete UC-T-03 first before any `Invoice` is created.
 
 Both dispatch async, never synchronously inside the cron's DB transaction.
@@ -38,23 +42,26 @@ Both dispatch async, never synchronously inside the cron's DB transaction.
 ---
 
 ### UC-T-04 — Execute Direct Payment
-**Tier:** Free
+**Tier:** Free · **Tech:** PayOS VietQR Checkout
 
-Once UC-T-03 completes and UC-L-06 Part 3 has generated the `Invoice` (with `totalAmount` already computed — there's no separate "view invoice, then decide to pay" gap in time, the invoice and the payment screen appear together immediately after meter confirmation), the tenant is shown the locked-amount VietQR. On webhook confirmation, this is **the exact same backend flow as UC-L-06 Part 3, step 6** — just initiated from the tenant's web app, not a separate implementation. Rooms with no metered services skip UC-T-03 entirely and the tenant lands directly on this payment screen once the due-date cron creates the invoice.
+Once UC-T-03 completes and UC-L-06 Part 3 has generated the `Invoice` (with `totalAmount` already computed — there's no separate "view invoice, then decide to pay" gap in time, the invoice and the payment screen appear together immediately after meter confirmation), the tenant is shown the locked-amount VietQR checkout powered by PayOS.
+Any active occupant of the room (`RoomOccupant WHERE roomId = invoice.roomId AND status = 'active'` or party to `invoice.contractId`) has full permission to initiate payment. On webhook confirmation from PayOS, this is **the exact same backend flow as UC-L-06 Part 3, step 6** — just initiated from the tenant's web app. Rooms with no metered services skip UC-T-03 entirely and the tenant lands directly on this payment screen once the invoice is generated.
 
 ---
 
 ### UC-T-05 — View Usage Analytics
 **Tier:** Free
 
-Query `MeterReading` + `InvoiceItem` for the tenant's current active `Contract.roomId`, grouped by billing period. Tenant-scoped — verify `TenantContract.tenantId = current_user.id` before returning any data.
+Query `MeterReading` + `InvoiceItem` for the tenant's current active room (`RoomOccupant.roomId` or `Contract.roomId`), grouped by billing period. Tenant-scoped — verify user is an active `RoomOccupant` of the room or party to an active `TenantContract` before returning any data.
 
 ---
 
 ### UC-T-06 — View Tenancy Details
 **Tier:** Free
 
-Read-only aggregate: active `Contract` + `Room` + `BoardingHouse` (basic info only, never financials) + `Notification WHERE boardingHouseId=... AND receiverId IS NULL` (broadcast announcements) + `RoomService` (fee structure).
+Read-only aggregate: active `Room` + `BoardingHouse` (basic info, never financials) + active roommates list (`RoomOccupant` WHERE `roomId = activeRoom.id AND status = 'active'`) + `Notification WHERE boardingHouseId=... AND receiverId IS NULL` (broadcast announcements) + `RoomService` (fee structure).
+- **If written contract exists**: Display contract terms, duration, and download/view PDF action (UC-L-15).
+- **If no written contract exists**: Display friendly status *"Chưa tạo hợp đồng văn bản"* (Not yet contracted) with information that the tenant is an active registered occupant, and guidance to request a formal contract from the landlord if needed for police temporary residence registration.
 
 ---
 
@@ -73,10 +80,13 @@ Read-only aggregate: active `Contract` + `Room` + `BoardingHouse` (basic info on
 ### UC-T-08 — View Payment History
 **Tier:** Free · **Models:** `Invoice`, `InvoiceItem`, `Payment`, `Contract`, `TenantContract`
 
-1. **Scope check first**: resolve every `Contract` this tenant has ever been party to — `TenantContract WHERE tenantId = current_user.id` joined `Contract`. This must include **past/ended contracts**, not just the currently active one — a tenant who moved out should still be able to see their old payment history. Never let the query silently default to only `status='active'`.
+1. **Scope check first**: resolve all rooms and contracts this tenant has ever been associated with:
+   - All rooms where tenant was an occupant: `RoomOccupant WHERE tenantId = current_user.id`
+   - All contracts where tenant was a party: `TenantContract WHERE tenantId = current_user.id`
+   This includes **past/ended occupancies and contracts** so past tenants can still view their historical payments.
 2. **Single aggregated query**, not N+1 per invoice:
    ```
-   Invoice WHERE contractId IN (<all of this tenant's contract ids>)
+   Invoice WHERE roomId IN (<tenant's occupied room ids>) OR contractId IN (<tenant's contract ids>)
      ├─ InvoiceItem (joined Service, for the per-line breakdown: rent / electricity / water / other services)
      └─ Payment (0-or-1, per the Payment.invoiceId @unique constraint — see 00-overview-and-conventions.md)
    ORDER BY dueDate desc
