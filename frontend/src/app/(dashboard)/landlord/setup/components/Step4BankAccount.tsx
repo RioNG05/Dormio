@@ -150,15 +150,15 @@ export function Step4BankAccount({
                   {bankInfo.accountName || 'NGUYEN VAN A'}
                 </Text>
               </div>
-              <Text
-                as="span"
-                variant="badge"
-                color="success"
-                className="inline-block px-3 py-1 bg-emerald-500/20 rounded-full border border-emerald-500/30 relative z-10 whitespace-nowrap"
-              >
-                {t('landlordSetupBankAutoNotice')}
-              </Text>
             </div>
+            <Text
+              as="span"
+              variant="body"
+              color="warning"
+              size='2xs'
+            >
+              {t('landlordSetupBankAutoNotice')}
+            </Text>
           </div>
         </div>
       </div>
