@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { uploadImageToBackend } from '@/services/upload.service'
 import { Button, TextInput, Text } from '@/components/ui'
+import { useTranslations } from '@/context/LanguageContext'
 
 interface CoverPhotoUploadProps {
   value?: string
@@ -18,15 +19,18 @@ interface CoverPhotoUploadProps {
   onFileChange?: (file: File | null) => void
   label?: string
   hint?: string
+  maxSizeMb?: number
 }
 
 export function CoverPhotoUpload({
   value,
   onChange,
   onFileChange,
-  label = 'Ảnh đại diện tòa nhà',
-  hint = 'Định dạng JPG, PNG, WEBP tối đa 5MB',
+  label,
+  hint,
+  maxSizeMb = 15,
 }: CoverPhotoUploadProps) {
+  const t = useTranslations('landlord')
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [previewUrl, setPreviewUrl] = useState<string>(value || '')
@@ -34,6 +38,9 @@ export function CoverPhotoUpload({
   const [fileSize, setFileSize] = useState<string>('')
   const [isUploading, setIsUploading] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const resolvedLabel = label || t('landlordSetupThumbnailLabel')
+  const resolvedHint = hint || t('landlordSetupThumbnailUploadHint')
 
   const formatBytes = (bytes: number): string => {
     if (bytes === 0) return '0 B'
@@ -48,13 +55,13 @@ export function CoverPhotoUpload({
 
     // Validate type
     if (!file.type.startsWith('image/')) {
-      setErrorMessage('Vui lòng chỉ tải lên tệp định dạng hình ảnh (JPG, PNG, WEBP).')
+      setErrorMessage(t('landlordSetupThumbnailFormatError') || 'Vui lòng chỉ tải lên tệp định dạng hình ảnh (JPG, PNG, WEBP).')
       return
     }
 
-    // Validate size: 5MB
-    if (file.size > 5 * 1024 * 1024) {
-      setErrorMessage('Kích thước ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.')
+    // Validate size: 15MB
+    if (file.size > maxSizeMb * 1024 * 1024) {
+      setErrorMessage(t('landlordSetupThumbnailSizeError'))
       return
     }
 
@@ -76,14 +83,14 @@ export function CoverPhotoUpload({
         }
       } catch (err: any) {
         console.error('Backend upload error:', err)
-        setErrorMessage('Không thể tải ảnh lên máy chủ. Đang sử dụng bản xem trước.')
+        setErrorMessage(t('landlordSetupThumbnailUploadFailed') || 'Không thể tải ảnh lên máy chủ. Đang sử dụng bản xem trước.')
       } finally {
         setIsUploading(false)
       }
     }
     reader.onerror = () => {
       setIsUploading(false)
-      setErrorMessage('Lỗi khi đọc tệp ảnh.')
+      setErrorMessage(t('landlordSetupThumbnailReadError') || 'Lỗi khi đọc tệp ảnh.')
     }
     reader.readAsDataURL(file)
   }
@@ -132,9 +139,9 @@ export function CoverPhotoUpload({
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
         <Text as="label" size="xs" weight="bold" color="default" uppercase className="tracking-wide">
-          {label}
+          {resolvedLabel}
         </Text>
-        {hint && <Text as="span" size="2xs" color="subtle">{hint}</Text>}
+        {resolvedHint && <Text as="span" size="2xs" color="subtle">{resolvedHint}</Text>}
       </div>
 
       <TextInput
@@ -157,7 +164,7 @@ export function CoverPhotoUpload({
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white backdrop-blur-xs">
                 <Loader2 className="h-7 w-7 animate-spin text-primary" />
                 <Text as="span" size="xs" weight="semibold" color="white" className="mt-2">
-                  Đang tải ảnh lên đám mây...
+                  {t('landlordSetupThumbnailUploading')}
                 </Text>
               </div>
             )}
@@ -170,7 +177,7 @@ export function CoverPhotoUpload({
               </div>
               <div className="truncate text-xs">
                 <Text size="xs" weight="semibold" color="default" truncate>
-                  {fileName || 'Ảnh đại diện đã chọn'}
+                  {fileName || resolvedLabel}
                 </Text>
                 {fileSize && <Text size="2xs" color="subtle">{fileSize}</Text>}
               </div>
@@ -184,7 +191,7 @@ export function CoverPhotoUpload({
                 leftIcon={<RefreshCw />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
-                  Đổi ảnh
+                  {t('landlordSetupThumbnailChange')}
                 </Text>
               </Button>
 
@@ -195,7 +202,7 @@ export function CoverPhotoUpload({
                 leftIcon={<X />}
               >
                 <Text as="span" size="xs" weight="medium" color="inherit">
-                  Xóa
+                  {t('landlordSetupThumbnailRemove')}
                 </Text>
               </Button>
             </div>
@@ -220,13 +227,10 @@ export function CoverPhotoUpload({
 
           <div className="mt-3 space-y-1">
             <Text size="sm" weight="bold" color="default">
-              Kéo thả ảnh vào đây hoặc{' '}
-              <Text as="span" color="brand" className="hover:underline">
-                chọn tệp từ máy
-              </Text>
+              {t('landlordSetupThumbnailUploadPrompt')}
             </Text>
             <Text size="xs" color="subtle">
-              Hỗ trợ định dạng PNG, JPG, WEBP (dung lượng tối đa 5MB)
+              {resolvedHint}
             </Text>
           </div>
         </div>
