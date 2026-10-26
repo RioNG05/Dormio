@@ -80,7 +80,22 @@ export const enCommon = {
     aiChatAlwaysOnline: "Always online",
     aiChatInputPlaceholder: "Ask a question...",
     aiChatPoweredBy: "Powered by Gemini AI",
-    aiChatCloseAria: "Close chat"
+    aiChatCloseAria: "Close chat",
+    pageNotFoundTitle: "404 - Page Not Found",
+    pageNotFoundSubtitle: "The page you are looking for could not be found",
+    pageNotFoundDesc: "The page may have been moved, deleted, or you might have entered the wrong URL.",
+    goBack: "Go Back",
+    goHome: "Back to Home",
+    tryAgain: "Try Again",
+    errorTitle: "500 - An Error Occurred",
+    errorSubtitle: "The system encountered an unexpected issue",
+    errorDesc: "We apologize for the inconvenience. An unexpected error occurred while processing this page. You can try again or return to the previous page.",
+    errorDetailsLabel: "Technical Error Details",
+    errorDigestLabel: "Error Digest Code",
+    errorShowDetails: "Show technical error details",
+    errorHideDetails: "Hide error details",
+    globalErrorTitle: "Critical Application Error",
+    globalErrorDesc: "The application encountered a critical issue at the root level. Please try reloading or return to the homepage.",
 }
 
 export default enCommon

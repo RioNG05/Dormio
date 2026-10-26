@@ -80,7 +80,22 @@ export const viCommon = {
     aiChatAlwaysOnline: "Luôn trực tuyến",
     aiChatInputPlaceholder: "Nhập câu hỏi của anh/chị...",
     aiChatPoweredBy: "Phát triển bởi Gemini AI",
-    aiChatCloseAria: "Đóng chat"
+    aiChatCloseAria: "Đóng chat",
+    pageNotFoundTitle: "404 - Không tìm thấy trang",
+    pageNotFoundSubtitle: "Trang bạn đang tìm kiếm không tồn tại",
+    pageNotFoundDesc: "Đường dẫn có thể đã bị thay đổi, bị gỡ bỏ hoặc bạn đã nhập sai địa chỉ URL.",
+    goBack: "Quay lại",
+    goHome: "Về trang chủ",
+    tryAgain: "Thử lại",
+    errorTitle: "500 - Đã có lỗi xảy ra",
+    errorSubtitle: "Hệ thống gặp sự cố trong quá trình xử lý",
+    errorDesc: "Rất tiếc, đã có sự cố ngoài ý muốn xảy ra trong quá trình xử lý trang này. Bạn có thể thử lại hoặc quay lại trang trước.",
+    errorDetailsLabel: "Thông tin chi tiết lỗi",
+    errorDigestLabel: "Mã lỗi đối soát (Digest)",
+    errorShowDetails: "Xem chi tiết lỗi kỹ thuật",
+    errorHideDetails: "Thu gọn chi tiết lỗi",
+    globalErrorTitle: "Lỗi ứng dụng nghiêm trọng",
+    globalErrorDesc: "Hệ thống gặp sự cố tại tầng giao diện gốc. Vui lòng thử tải lại trang hoặc về trang chủ.",
 }
 
 export default viCommon
