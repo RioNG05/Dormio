@@ -127,6 +127,8 @@ export const enNav = {
     userMenuStaffDashboard: "Staff Dashboard",
     userMenuAdminDashboard: "Admin Dashboard",
     userMenuNoAccess: "No access",
+    logoutConfirmTitle: "Confirm Logout",
+    logoutConfirmMessage: "Are you sure you want to log out of your current account?",
     manageYourHouse: "Manage your boarding house",
     searchMockRoom1Title: "Studio Apartment with Balcony Nguyen Hue D1",
     searchMockRoom1Price: "4.5M/mo",

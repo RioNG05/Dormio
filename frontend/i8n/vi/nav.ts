@@ -127,6 +127,8 @@ export const viNav = {
     userMenuStaffDashboard: "Bảng điều khiển Nhân viên",
     userMenuAdminDashboard: "Bảng điều khiển Quản trị viên",
     userMenuNoAccess: "Không có quyền truy cập",
+    logoutConfirmTitle: "Xác nhận đăng xuất",
+    logoutConfirmMessage: "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản hiện tại không?",
     manageYourHouse: "Quản lý nhà trọ của bạn",
     searchMockRoom1Title: "Phòng Studio Ban Công Nguyễn Huệ Quận 1",
     searchMockRoom1Price: "4.5 Tr/tháng",
