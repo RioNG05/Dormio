@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { X, Send, Bot, User, Loader2 } from 'lucide-react'
+import { X, Send, User } from 'lucide-react'
 import { useLanguage, useTranslations } from '@/context/LanguageContext'
 import { api } from '@/services/api'
 import { Button, TextInput, Text } from '@/components/ui'
@@ -103,18 +103,22 @@ export default function AIChatBot() {
 
   return (
     <>
-      {/* Floating Launcher Button */}
+      {/* Floating Launcher Button with Mio Mascot */}
       {!isOpen && (
         <Button
           rounded="full"
           size="icon"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 !w-14 !h-14 shadow-lg hover:scale-105 z-[100] group"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 !w-14 !h-14 shadow-lg hover:scale-105 z-[100] group overflow-hidden p-0 border-2 border-primary/20 bg-primary"
           title={t('aiChatBotTitle')}
           aria-label={t('aiChatBotTitle')}
         >
-          <Bot className="group-hover:animate-pulse" />
-          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-accent border-2 border-white rounded-full" />
+          <img
+            src="/mio-avt.png"
+            alt="Mio AI"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          />
+          <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-accent border-2 border-white dark:border-zinc-900 rounded-full z-10" />
         </Button>
       )}
 
@@ -124,8 +128,12 @@ export default function AIChatBot() {
           {/* Header */}
           <div className="bg-primary p-4 flex justify-between items-center text-white shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm shrink-0">
-                <Bot className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-white/30 shadow-xs bg-white/20">
+                <img
+                  src="/mio-avt.png"
+                  alt="Mio AI"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <Text as="h3" size="base" weight="bold" color="inherit" className="text-white">
@@ -157,26 +165,33 @@ export default function AIChatBot() {
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                    }`}
+                  className={`flex gap-2 max-w-[85%] ${
+                    msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'
+                  }`}
                 >
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
-                      ? 'bg-line text-muted'
-                      : 'bg-primary/10 text-primary'
-                      }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden ${
+                      msg.role === 'user'
+                        ? 'bg-line text-muted'
+                        : 'bg-primary/10 text-primary border border-primary/20'
+                    }`}
                   >
                     {msg.role === 'user' ? (
                       <User className="w-4 h-4" />
                     ) : (
-                      <Bot className="w-5 h-5" />
+                      <img
+                        src="/mio-avt.png"
+                        alt="Mio AI"
+                        className="w-full h-full object-cover"
+                      />
                     )}
                   </div>
                   <div
-                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${msg.role === 'user'
-                      ? 'bg-primary text-white rounded-tr-sm prose-invert'
-                      : 'bg-card border border-line text-foreground rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
-                      }`}
+                    className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed prose prose-sm max-w-none ${
+                      msg.role === 'user'
+                        ? 'bg-primary text-white rounded-tr-sm prose-invert'
+                        : 'bg-card border border-line text-foreground rounded-tl-sm shadow-sm prose-p:my-1 prose-ul:my-1 prose-li:my-0'
+                    }`}
                   >
                     <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
@@ -203,8 +218,12 @@ export default function AIChatBot() {
             {isLoading && (
               <div className="flex justify-start">
                 <div className="flex gap-2 max-w-[85%]">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <Bot className="w-5 h-5" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 border border-primary/20 bg-primary/10">
+                    <img
+                      src="/mio-avt.png"
+                      alt="Mio AI"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="px-4 py-3 rounded-2xl bg-card border border-line rounded-tl-sm shadow-sm flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-zinc-300 animate-bounce" />

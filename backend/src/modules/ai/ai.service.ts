@@ -3,13 +3,20 @@ import { ConfigService } from '@nestjs/config'
 import { PrismaService } from '../../common/prisma/prisma.service'
 import { AiChatDto, AiChatResponseDto } from './dto/ai-chat.dto'
 
-const DORMIO_SYSTEM_INSTRUCTION = `Bạn là Dormio AI Assistant — Trợ lý thông minh dành riêng cho Chủ trọ trên hệ thống quản lý phòng trọ Dormio.
-Nhiệm vụ của bạn:
-1. Hướng dẫn Chủ trọ (Landlord) sử dụng các tính năng của hệ thống (Landlord Dashboard).
-2. Nắm rõ toàn bộ tính năng: Quản lý nhà trọ, quản lý phòng, hợp đồng điện tử, chốt chỉ số điện nước tự động bằng AI OCR, quản lý nhân viên, chấm công, hóa đơn VietQR PayOS, xem báo cáo tài chính.
-3. Khi giải đáp, cần hướng dẫn chi tiết các bước thực hiện tính năng và cách điều hướng (truy cập vào đâu trên giao diện).
-4. Trình bày rõ ràng, sử dụng bullet point, ngắn gọn dễ hiểu.
-5. Khi được cung cấp dữ liệu ngữ cảnh (context) về tài khoản của chủ trọ, hãy phân tích để tư vấn dựa trên số lượng nhà trọ, chi tiết từng nhà trọ (số tầng, phòng, khách thuê, công nợ, tài sản) để đưa ra câu trả lời cá nhân hóa.`
+const DORMIO_SYSTEM_INSTRUCTION = `Bạn là Mio — Trợ lý AI của nền tảng Dormio (nền tảng quản lý nhà trọ và kết nối thuê phòng thông minh).
+
+Quy tắc xưng hô và phong cách giao tiếp (BẮT BUỘC):
+1. Tên của bạn là Mio. Trong mọi lời chào, lời giới thiệu hoặc khi được hỏi tên, bạn luôn tự giới thiệu mình là Mio, trợ lý AI của nền tảng Dormio.
+2. Luôn luôn gọi người dùng là "anh/chị" (hoặc "anh/chị [Tên]" khi đã biết tên) và xưng "em" trong mọi câu trả lời (ví dụ: "Dạ em chào anh/chị...", "Em có thể hỗ trợ gì cho anh/chị ạ?", "Dạ thưa anh/chị...").
+3. Giữ thái độ thân thiện, lịch thiệp, chu đáo, nhiệt tình và chuyên nghiệp.
+
+Nhiệm vụ và năng lực của bạn:
+1. Hướng dẫn và giải đáp thắc mắc cho người dùng (Chủ trọ, Khách thuê, Nhân viên) về các tính năng của Dormio:
+   - Dành cho Chủ trọ (Landlord): Quản lý nhà trọ & toà nhà, tạo phòng hàng loạt, quản lý tiện nghi (chung/riêng), thiết lập đơn vị dịch vụ (đo lường kWh/m³, phí cố định theo đầu người/phòng), lập hợp đồng điện tử, chốt chỉ số điện nước tự động bằng AI Vision OCR, lập và gửi hóa đơn tự động kèm mã thanh toán PayOS VietQR, quản lý nhân viên & phân ca chấm công, quản lý công nợ và tài sản, xem báo cáo tài chính doanh thu/chi phí, quản lý gói cước thuê bao.
+   - Dành cho Khách thuê (Tenant): Xem hợp đồng thuê phòng, nhận thông báo hóa đơn hàng tháng và quét mã VietQR PayOS để thanh toán tự động, gửi ảnh chụp đồng hồ điện nước, gửi kiến nghị/khiếu nại trực tiếp đến chủ trọ.
+2. Hướng dẫn chi tiết từng bước (step-by-step) và chỉ rõ vị trí thao tác trên giao diện người dùng.
+3. Trình bày rõ ràng, sử dụng định dạng Markdown và gạch đầu dòng (bullet points), ngắn gọn, súc tích và dễ hiểu.
+4. Khi được cung cấp dữ liệu ngữ cảnh (context), hãy phân tích dữ liệu để trả lời chính xác, cá nhân hóa cho anh/chị mà không hỏi lại các thông tin đã có.`
 
 @Injectable()
 export class AiService {
@@ -134,7 +141,29 @@ export class AiService {
       try {
         const userContext = await this.prisma.user.findUnique({
           where: { id: userId },
-          include: {
+          select: {
+            id: true,
+            username: true,
+            phoneNumber: true,
+            email: true,
+            bio: true,
+            status: true,
+            mustChangePassword: true,
+            role: true,
+            createdAt: true,
+            userIdentification: {
+              select: {
+                fullName: true,
+              },
+            },
+            userSubscriptions: {
+              where: { status: 'active' },
+              include: {
+                subscriptionPlan: true,
+              },
+              orderBy: { createdAt: 'desc' },
+              take: 1,
+            },
             boardingHouses: {
               include: {
                 rooms: {
@@ -152,44 +181,118 @@ export class AiService {
                 assets: true,
               },
             },
-            userSubscriptions: {
+            roomOccupants: {
               where: { status: 'active' },
-              include: { subscriptionPlan: true },
+              include: {
+                boardingHouse: { select: { name: true } },
+                room: { select: { roomNumber: true } },
+              },
             },
           },
         })
 
         if (userContext) {
-          const houseCount = userContext.boardingHouses.length
-          const activePlan = userContext.userSubscriptions[0]?.subscriptionPlan?.planName || 'Free'
+          const fullName = userContext.userIdentification?.fullName?.trim()
+          const username = userContext.username?.trim()
+          const displayName = fullName || username || ''
 
-          let bhContextInfo = ''
-          userContext.boardingHouses.forEach((bh, index) => {
-            const floors = bh.totalFloor || 1
-            const rooms = bh.rooms.length
-            const servicesCount = bh.services.length
-            const assetsCount = bh.assets.length
-            const assetNames = bh.assets.map(a => a.name).join(', ') || 'Không có'
+          const roleDisplayMap: Record<string, string> = {
+            landlord: 'Chủ trọ / Quản lý nhà trọ',
+            tenant: 'Khách thuê phòng trọ',
+            staff: 'Nhân viên quản lý toà nhà',
+            admin: 'Quản trị viên hệ thống',
+            leasing_agent: 'Môi giới / Đại lý cho thuê',
+          }
+          const roleName = roleDisplayMap[userContext.role] || userContext.role
 
-            let totalTenants = 0
-            let totalDebt = 0
+          const statusDisplayMap: Record<string, string> = {
+            active: 'Đang hoạt động (Active)',
+            inactive: 'Chưa kích hoạt (Inactive)',
+            suspended: 'Đang tạm khóa (Suspended)',
+          }
+          const statusName = statusDisplayMap[userContext.status] || userContext.status
 
-            bh.rooms.forEach(room => {
-              room.contracts.forEach(c => {
-                totalTenants += c.tenantContracts.length
+          const joinedDate = userContext.createdAt
+            ? new Date(userContext.createdAt).toLocaleDateString('vi-VN')
+            : 'Mới tham gia'
+
+          const activeSub = userContext.userSubscriptions?.[0]
+          let subscriptionInfo = 'Gói miễn phí (Free)'
+          if (activeSub) {
+            const planName = activeSub.planName || activeSub.subscriptionPlan?.planName || 'Chưa rõ'
+            const endDate = activeSub.endDate
+              ? new Date(activeSub.endDate).toLocaleDateString('vi-VN')
+              : 'Vô thời hạn'
+            const maxRooms = activeSub.subscriptionPlan?.maxRoom
+              ? `${activeSub.subscriptionPlan.maxRoom} phòng`
+              : 'Không giới hạn'
+            subscriptionInfo = `Gói ${planName} (Hạn đến: ${endDate}, Giới hạn tối đa: ${maxRooms})`
+          }
+
+          let contextText = `\n\n--- THÔNG TIN NGƯỜI DÙNG ĐANG TRÒ CHUYỆN ---`
+          if (displayName) {
+            contextText += `\n- Họ và tên / Tên hiển thị: ${displayName}${username && fullName ? ` (Username: ${username})` : ''}`
+          }
+          contextText += `\n- Vai trò tài khoản: ${roleName}`
+          contextText += `\n- Trạng thái tài khoản: ${statusName}`
+          contextText += `\n- Cần đổi mật khẩu (mustChangePassword): ${userContext.mustChangePassword ? 'Có (Chưa đổi mật khẩu mặc định)' : 'Không (Đã đổi)'}`
+          if (userContext.bio) {
+            contextText += `\n- Giới thiệu bản thân (Bio): ${userContext.bio}`
+          }
+          if (userContext.phoneNumber) {
+            contextText += `\n- Số điện thoại liên hệ: ${userContext.phoneNumber}`
+          }
+          if (userContext.email) {
+            contextText += `\n- Email liên kết: ${userContext.email}`
+          }
+          contextText += `\n- Gói thuê bao (User Subscription): ${subscriptionInfo}`
+          contextText += `\n- Ngày tham gia Dormio: ${joinedDate}`
+
+          // Boarding house details (if user is landlord or manages houses)
+          if (userContext.boardingHouses && userContext.boardingHouses.length > 0) {
+            const houseCount = userContext.boardingHouses.length
+            contextText += `\n\n--- DANH SÁCH NHÀ TRỌ ĐANG QUẢN LÝ (${houseCount} toà nhà) ---`
+
+            userContext.boardingHouses.forEach((bh, index) => {
+              const floors = bh.totalFloor || 1
+              const rooms = bh.rooms.length
+              const servicesCount = bh.services.length
+              const assetsCount = bh.assets.length
+              const assetNames = bh.assets.map(a => a.name).join(', ') || 'Không có'
+
+              let totalTenants = 0
+              let totalDebt = 0
+
+              bh.rooms.forEach(room => {
+                room.contracts.forEach(c => {
+                  totalTenants += c.tenantContracts.length
+                })
+                room.invoices.forEach(inv => {
+                  totalDebt += Number(inv.totalAmount)
+                })
               })
-              room.invoices.forEach(inv => {
-                totalDebt += Number(inv.totalAmount)
-              })
+
+              contextText += `\n- Toà nhà ${index + 1} (${bh.name}): ${floors} tầng, ${rooms} phòng, ${totalTenants} khách thuê đang ở, ${servicesCount} dịch vụ, tổng công nợ chưa thu: ${totalDebt.toLocaleString('vi-VN')} VNĐ. Tài sản (${assetsCount} món): ${assetNames}.`
             })
+          }
 
-            bhContextInfo += `\n- Nhà trọ ${index + 1} (${bh.name}): ${floors} tầng, ${rooms} phòng, ${totalTenants} người thuê, ${servicesCount} dịch vụ, tổng công nợ: ${totalDebt} VNĐ. Tài sản gồm (${assetsCount} món): ${assetNames}.`
-          })
+          // Active room tenancy details (if user is a tenant)
+          if (userContext.roomOccupants && userContext.roomOccupants.length > 0) {
+            contextText += `\n\n--- THÔNG TIN PHÒNG TRỌ ĐANG THUÊ ---`
+            userContext.roomOccupants.forEach(occ => {
+              const roomNum = occ.room?.roomNumber || 'Chưa rõ số phòng'
+              const bhName = occ.boardingHouse?.name || 'Khu trọ'
+              const joinDate = occ.joinedAt ? new Date(occ.joinedAt).toLocaleDateString('vi-VN') : ''
+              contextText += `\n- Đang thuê Phòng ${roomNum} tại ${bhName}${joinDate ? ` (từ ngày ${joinDate})` : ''}.`
+            })
+          }
 
-          dynamicSystemInstruction += `\n\n--- THÔNG TIN NGỮ CẢNH CỦA CHỦ TRỌ ---
-- Gói cước đang sử dụng: ${activePlan}
-- Số lượng nhà trọ đang quản lý: ${houseCount}${bhContextInfo}
-Hãy sử dụng thông tin này để trả lời chủ trọ (Tuyệt đối không nêu thông tin cá nhân khách thuê).`
+          contextText += `\n\nLƯU Ý GIAO TIẾP VỚI NGƯỜI DÙNG:
+- Luôn gọi người dùng là "anh/chị"${displayName ? ` hoặc "anh/chị ${displayName}"` : ''} và xưng "em" trong mọi câu trả lời.
+- Tuyệt đối không bao giờ hỏi hay đề cập đến các thông tin siêu nhạy cảm như mật khẩu, mã OTP, số tài khoản ngân hàng.
+- Hãy dùng các thông tin trên một cách tự nhiên, lịch thiệp để giải đáp câu hỏi và cá nhân hóa tư vấn cho anh/chị.`
+
+          dynamicSystemInstruction += contextText
         }
       } catch (err) {
         this.logger.error('Error fetching user context for AI: ' + err)

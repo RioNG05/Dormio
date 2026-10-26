@@ -234,8 +234,7 @@ export function Step1RoomTenant() {
                 })}
               </span>
               <span className="text-xs font-medium block mt-1">
-                {t('landlordCustomersModalDesc') ||
-                  'Thêm người thuê vào phòng để tiến hành ký hợp đồng và quản lý cư dân.'}
+                {t('landlordCustomersModalDesc')}
               </span>
             </div>
           </div>

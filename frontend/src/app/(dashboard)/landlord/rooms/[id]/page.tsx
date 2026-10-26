@@ -138,7 +138,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     isOpen: false,
     title: '',
     message: '',
-    onConfirm: () => {},
+    onConfirm: () => { },
   })
 
   // Filter state for Month/Year
@@ -265,23 +265,23 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
           rawOccupants.length > 0
             ? rawOccupants
             : (activeContract?.tenants || []).map((t: any) => ({
-                id: t.id,
-                tenantId: t.id,
-                fullName: t.fullName,
-                phoneNumber: t.phoneNumber,
-                email: t.email,
-                avatarUrl: t.avatarUrl,
-                hasAccount: true,
-                hasIdentification: Boolean(t.hasIdentification),
-                identityNumber: t.identityNumber,
-                dateOfBirth: t.dateOfBirth,
-                gender: t.gender,
-                status: 'active' as const,
-                joinedAt: activeContract?.startDate || new Date().toISOString(),
-                note: 'Khách thuê theo hợp đồng',
-                hasContract: true,
-                contractId: activeContract?.id,
-              }))
+              id: t.id,
+              tenantId: t.id,
+              fullName: t.fullName,
+              phoneNumber: t.phoneNumber,
+              email: t.email,
+              avatarUrl: t.avatarUrl,
+              hasAccount: true,
+              hasIdentification: Boolean(t.hasIdentification),
+              identityNumber: t.identityNumber,
+              dateOfBirth: t.dateOfBirth,
+              gender: t.gender,
+              status: 'active' as const,
+              joinedAt: activeContract?.startDate || new Date().toISOString(),
+              note: 'Khách thuê theo hợp đồng',
+              hasContract: true,
+              contractId: activeContract?.id,
+            }))
         const primaryTenant = occupants[0] || activeContract?.tenants?.[0]
 
         const formattedPrice = activeContract?.rentPrice
@@ -475,14 +475,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         setRoom(prev =>
           prev
             ? {
-                ...prev,
-                roomNumber: data.roomNumber || prev.roomNumber,
-                price: data.price.includes('₫') ? data.price : `${data.price} ₫`,
-                area: data.area || prev.area,
-                floor: data.floor || prev.floor,
-                amenities: data.amenities,
-                notes: data.notes,
-              }
+              ...prev,
+              roomNumber: data.roomNumber || prev.roomNumber,
+              price: data.price.includes('₫') ? data.price : `${data.price} ₫`,
+              area: data.area || prev.area,
+              floor: data.floor || prev.floor,
+              amenities: data.amenities,
+              notes: data.notes,
+            }
             : null,
         )
         setEditServices(data.services)
@@ -496,14 +496,14 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
       setRoom(prev =>
         prev
           ? {
-              ...prev,
-              roomNumber: data.roomNumber || prev.roomNumber,
-              price: data.price.includes('₫') ? data.price : `${data.price} ₫`,
-              area: data.area || prev.area,
-              floor: data.floor || prev.floor,
-              amenities: data.amenities,
-              notes: data.notes,
-            }
+            ...prev,
+            roomNumber: data.roomNumber || prev.roomNumber,
+            price: data.price.includes('₫') ? data.price : `${data.price} ₫`,
+            area: data.area || prev.area,
+            floor: data.floor || prev.floor,
+            amenities: data.amenities,
+            notes: data.notes,
+          }
           : null,
       )
       setEditServices(data.services)
@@ -782,23 +782,23 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     rawOccupants.length > 0
       ? rawOccupants
       : (currentContract?.tenants || []).map((t: any) => ({
-          id: t.id,
-          tenantId: t.id,
-          fullName: t.fullName,
-          phoneNumber: t.phoneNumber,
-          email: t.email,
-          avatarUrl: t.avatarUrl,
-          hasAccount: true,
-          hasIdentification: Boolean(t.hasIdentification),
-          identityNumber: t.identityNumber,
-          dateOfBirth: t.dateOfBirth,
-          gender: t.gender,
-          status: 'active' as const,
-          joinedAt: currentContract?.startDate || new Date().toISOString(),
-          note: 'Khách thuê theo hợp đồng',
-          hasContract: true,
-          contractId: currentContract?.id,
-        }))
+        id: t.id,
+        tenantId: t.id,
+        fullName: t.fullName,
+        phoneNumber: t.phoneNumber,
+        email: t.email,
+        avatarUrl: t.avatarUrl,
+        hasAccount: true,
+        hasIdentification: Boolean(t.hasIdentification),
+        identityNumber: t.identityNumber,
+        dateOfBirth: t.dateOfBirth,
+        gender: t.gender,
+        status: 'active' as const,
+        joinedAt: currentContract?.startDate || new Date().toISOString(),
+        note: 'Khách thuê theo hợp đồng',
+        hasContract: true,
+        contractId: currentContract?.id,
+      }))
 
   const availablePeriods = Array.from(
     new Set([
@@ -873,7 +873,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             <Button
               size="md"
               onClick={() => router.push(`/landlord/meter-readings?roomId=${resolvedParams.id}`)}
-              leftIcon={<Gauge className="w-4 h-4" />}
+              leftIcon={<Gauge />}
               className="flex-1 md:flex-initial"
             >
               {t('landlordRoomDetailBtnLogMeter')}
@@ -889,16 +889,17 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
               }
               size="md"
               variant="outline"
-              leftIcon={<Eye className="w-4 h-4" />}
+              leftIcon={<Eye />}
               className="flex-1 md:flex-initial"
             >
               {t('landlordRoomDetailBtnViewContract')}
             </Button>
           ) : (
             <Button
+              variant='accent'
               href={`/landlord/contracts/create?roomId=${dashboardData?.room?.id || room?.id || resolvedParams.id}`}
               size="md"
-              leftIcon={<FileSignature className="w-4 h-4" />}
+              leftIcon={<FileSignature />}
               className="flex-1 md:flex-initial"
             >
               {t('landlordRoomDetailBtnCreateContract')}
@@ -909,7 +910,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
             size="md"
             variant="secondary"
             onClick={() => setIsEditModalOpen(true)}
-            leftIcon={<Edit className="w-4 h-4" />}
+            leftIcon={<Edit />}
             className="flex-1 md:flex-initial"
           >
             {t('landlordRoomDetailBtnEdit')}
@@ -932,7 +933,7 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
                 },
               })
             }}
-            leftIcon={<Trash2 className="w-4 h-4" />}
+            leftIcon={<Trash2 />}
             className="flex-1 md:flex-initial"
           >
             {t('landlordRoomDetailBtnDelete')}

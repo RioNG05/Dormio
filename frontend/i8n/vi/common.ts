@@ -72,13 +72,13 @@ export const viCommon = {
     notiPackagePaymentSuccessContent: "Gói cước của bạn đã được thanh toán và kích hoạt thành công qua PayOS. Chúc bạn có trải nghiệm tuyệt vời!",
     notiTurnsPaymentSuccessTitle: "Mua lượt đăng tin thành công",
     notiTurnsPaymentSuccessContent: "Bạn đã mua thành công lượt đăng tin mới. Bắt đầu đăng tin ngay!",
-    aiChatWelcomeMessage: "Xin chào! Tôi là trợ lý ảo của Dormio. Bạn cần hỗ trợ gì về việc quản lý hệ thống tòa nhà hôm nay?",
-    aiChatErrorMessage: "Xin lỗi, hiện tại hệ thống AI đang gặp sự cố. Vui lòng thử lại sau.",
+    aiChatWelcomeMessage: "Xin chào! Em là Mio, trợ lý AI của nền tảng Dormio. Em có thể hỗ trợ gì cho anh/chị hôm nay?",
+    aiChatErrorMessage: "Xin lỗi anh/chị, hiện tại hệ thống AI đang gặp sự cố. Vui lòng thử lại sau.",
     aiChatServerError: "Lỗi kết nối đến máy chủ",
-    aiChatBotTitle: "Trợ lý ảo Dormio",
-    aiChatHeaderTitle: "Trợ lý ảo Dormio",
+    aiChatBotTitle: "Mio - Trợ lý AI Dormio",
+    aiChatHeaderTitle: "Mio - Trợ lý AI Dormio",
     aiChatAlwaysOnline: "Luôn trực tuyến",
-    aiChatInputPlaceholder: "Nhập câu hỏi của bạn...",
+    aiChatInputPlaceholder: "Nhập câu hỏi của anh/chị...",
     aiChatPoweredBy: "Phát triển bởi Gemini AI",
     aiChatCloseAria: "Đóng chat"
 }
