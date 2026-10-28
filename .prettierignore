@@ -3,7 +3,7 @@ node_modules
 dist
 build
 coverage
-backend/prisma/migrations
+api/prisma/migrations
 pnpm-lock.yaml
 package-lock.json
 *.min.js

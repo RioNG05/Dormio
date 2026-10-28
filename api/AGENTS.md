@@ -1,6 +1,6 @@
-# Backend — NestJS Agent Instructions
+# Backend API — NestJS Agent Instructions
 
-> Inherits from root AGENTS.md. These rules apply specifically to `backend/`.
+> Inherits from root AGENTS.md. These rules apply specifically to `api/`.
 
 ## Project Setup
 
@@ -12,13 +12,13 @@
 ## Dev Commands
 
 ```bash
-cd backend
+cd api
 pnpm start:dev          # Start with hot reload (port 3001)
 pnpm build              # Build for production
 pnpm test               # Run Jest unit tests
-pnpm prisma:generate    # Re-generate Prisma client after schema changes
-pnpm prisma:migrate:dev # Apply migration in dev
-pnpm prisma:studio      # Open Prisma Studio
+pnpm db:generate        # Re-generate Prisma client after schema changes
+pnpm db:migrate         # Apply migration in dev
+pnpm db:studio          # Open Prisma Studio
 ```
 
 ## Module Convention

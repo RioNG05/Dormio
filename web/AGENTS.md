@@ -1,6 +1,6 @@
-# Frontend — Next.js Agent Instructions
+# Frontend Web — Next.js Agent Instructions
 
-> Inherits from root AGENTS.md. These rules apply specifically to `frontend/`.
+> Inherits from root AGENTS.md. These rules apply specifically to `web/`.
 
 ## Project Setup
 
@@ -16,7 +16,7 @@
 ## Dev Commands
 
 ```bash
-cd frontend
+cd web
 pnpm dev      # Start dev server (port 3000)
 pnpm build    # Build for production
 pnpm lint     # Run ESLint
@@ -120,9 +120,9 @@ JWT_SECRET=... (for middleware server-side verify)
 ## Internationalization (i18n) Rules
 
 - **Strict Centralization**: Strictly NEVER handle i18n messages directly on pages or components using inline ternary operators (e.g. `isEn ? "..." : "..."`, `currentLocale === "en" ? ... : ...`) or hardcoded display strings.
-- **Repository Location**: All localization messages MUST be defined in the `frontend/i8n/` directory:
-  - `frontend/i8n/vi.ts` (Vietnamese, default)
-  - `frontend/i8n/en.ts` (English)
+- **Repository Location**: All localization messages MUST be defined in the `web/i8n/` directory:
+  - `web/i8n/vi.ts` (Vietnamese, default)
+  - `web/i8n/en.ts` (English)
 - **Usage**: Import `useTranslations` from `@/context/LanguageContext`:
   ```tsx
   import { useTranslations } from "@/context/LanguageContext";

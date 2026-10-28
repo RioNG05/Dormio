@@ -47,12 +47,12 @@ WORKDIR /app
 
 # Copy standalone server
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-# Copy static assets to both root and frontend subfolder to ensure resolution
+# Copy static assets to root, web and frontend subfolder to ensure resolution
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./frontend/.next/static
-# Copy public assets to both root and frontend subfolder
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./web/.next/static
+# Copy public assets to root, web and frontend subfolder
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/public ./frontend/public
+COPY --from=builder --chown=nextjs:nodejs /app/public ./web/public
 
 USER nextjs
 
@@ -61,4 +61,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "if [ -f server.js ]; then node server.js; elif [ -f web/server.js ]; then node web/server.js; else node frontend/server.js; fi"]

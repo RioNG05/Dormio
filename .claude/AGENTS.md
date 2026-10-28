@@ -31,9 +31,9 @@ A SaaS platform for Vietnamese boarding house management with two main modules:
 - `docs/spec/06-appendices.md` — media storage, payment types, schema gaps
 
 ### Code
-- `backend/prisma/schema.prisma` — the database schema (Prisma v7 format)
-- `backend/src/` — NestJS app (currently minimal, needs modules)
-- `frontend/src/` — Next.js app (has route structure, needs implementation)
+- `api/prisma/schema.prisma` — the database schema (Prisma v7 format)
+- `api/src/` — NestJS app (currently minimal, needs modules)
+- `web/src/` — Next.js app (has route structure, needs implementation)
 - `.agents/rules/dormio-global.md` — hard rules all agents must follow
 - `.agents/skills/` — skill files for common patterns
 
@@ -68,7 +68,7 @@ Load these skills (read their SKILL.md) when working on:
 ## Module Breakdown
 
 ```
-Use Cases → Module folders (to create in backend/src/modules/):
+Use Cases → Module folders (to create in api/src/modules/):
 - auth          (login, register, change-password, findOrCreateByPhone)
 - users         (profile, UserIdentification)
 - boarding-houses (CRUD, multi-property context)
@@ -91,7 +91,7 @@ Use Cases → Module folders (to create in backend/src/modules/):
 - admin          (analytics, grievances, mass-notifications)
 - grievances     (UC-T-07, UC-A-04)
 
-Frontend pages (in frontend/src/app/):
+Frontend pages (in web/src/app/):
 - (auth)/login, (auth)/register, (auth)/change-password
 - (dashboard)/landlord/* — property, rooms, contracts, invoices, staff, schedule
 - (dashboard)/tenant/* — contract, invoices, meter readings, chat
@@ -109,7 +109,7 @@ Prisma schema: comprehensive and mostly complete. Missing: GRIEVANCE and MASS_NO
 
 1. Find the UC number in `docs/technical_spec.md` index → open the relevant `docs/spec/XX-*.md` file
 2. Read `docs/spec/00-global-conventions.md` for cross-cutting rules that always apply
-3. Check `backend/prisma/schema.prisma` for the relevant models
+3. Check `api/prisma/schema.prisma` for the relevant models
 4. Load `dormio-domain` skill for entity quick-reference
 5. Load `implement-feature` skill for the full workflow (spec → design → backend → DB → frontend → tests → verify)
 6. Follow global rules in `.agents/rules/dormio-global.md`

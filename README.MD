@@ -154,10 +154,10 @@ Set up the environment configuration files in the root, backend, and frontend di
 
 ```bash
 # 1. Backend environment
-cp backend/.env.example backend/.env
+cp api/.env.example api/.env
 
 # 2. Frontend environment
-cp frontend/.env.example frontend/.env.development
+cp web/.env.example web/.env.development
 ```
 
 #### Root Environment (`Dormio/.env`)
@@ -176,7 +176,7 @@ PGADMIN_PASSWORD=admin123
 PGADMIN_PORT=5050
 ```
 
-#### Backend Environment (`Dormio/backend/.env`)
+#### Backend Environment (`Dormio/api/.env`)
 ```env
 # ─── Frontend & Application ──────────────────────────────────────────────────
 FRONTEND_URL=http://localhost:3000
@@ -216,7 +216,7 @@ AI_MODEL_TEXT=gemini-3.5-flash-lite
 GOOGLE_MAPS_API_KEY=
 ```
 
-#### Frontend Environment (`Dormio/frontend/.env.development`)
+#### Frontend Environment (`Dormio/web/.env.development`)
 ```env
 # Public backend API host & port
 NEXT_PUBLIC_API_URL=http://localhost
@@ -338,8 +338,8 @@ Dormio supports two development workflows depending on your preference and syste
 | `pnpm run docker:logs:fe` | Streams real-time Frontend container logs |
 | `pnpm run docker:clean` | Stops containers and purges volumes (resets local database) |
 | **Production Deployment (Low-RAM VPS Workflow)** | |
-| `pnpm run deploy:be` | Builds production Backend image (`linux/amd64`) and exports `dormio-backend.tar` |
-| `pnpm run deploy:fe` | Builds production Frontend image (`linux/amd64`) and exports `dormio-frontend.tar` |
+| `pnpm run deploy:be` | Builds production Backend image (`linux/amd64`) and exports `dormio-api.tar` |
+| `pnpm run deploy:fe` | Builds production Frontend image (`linux/amd64`) and exports `dormio-web.tar` |
 | `pnpm run deploy:all` | Builds both Backend & Frontend and exports both `.tar` archives |
 | **Testing & Quality** | |
 | `pnpm run test:be` | Executes all Jest unit tests in the backend |
@@ -353,7 +353,7 @@ Dormio supports two development workflows depending on your preference and syste
 
 ```text
 Dormio/
-├── backend/                       # NestJS v11 REST API Application
+├── api/                       # NestJS v11 REST API Application
 │   ├── prisma/
 │   │   ├── schema.prisma          # PostgreSQL relational schema models
 │   │   └── seed.ts                # Database seeder script
@@ -394,7 +394,7 @@ Dormio/
 │   │   └── main.ts                # Application bootstrap (CORS, Swagger, validation)
 │   └── tsconfig.json
 │
-├── frontend/                      # Next.js 16 App Router (React 19, TailwindCSS v4)
+├── web/                      # Next.js 16 App Router (React 19, TailwindCSS v4)
 │   ├── i8n/                       # Centralized localization dictionaries (vi.ts, en.ts)
 │   │   ├── vi/                    # Vietnamese translations (errors, common, modules)
 │   │   └── en/                    # English translations

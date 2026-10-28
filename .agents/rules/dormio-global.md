@@ -21,13 +21,13 @@
 
 ```
 /
-├── backend/          # NestJS app (port 3001)
+├── api/          # NestJS app (port 3001)
 │   ├── src/
 │   │   ├── modules/  # Feature modules (one folder per domain)
 │   │   └── common/   # Guards, interceptors, decorators, pipes, filters
 │   ├── prisma/schema.prisma
 │   └── generated/prisma/  # DO NOT EDIT
-└── frontend/         # Next.js app (port 3000)
+└── web/         # Next.js app (port 3000)
     └── src/
         ├── app/
         │   ├── (auth)/
@@ -180,10 +180,10 @@ Whenever writing or modifying any backend endpoint in NestJS:
 
 Whenever creating or modifying **any frontend page, component, or layout**:
 
-1. **Centralized Message Repository**: All user-visible messages and translations MUST be defined in the `frontend/i8n/` directory:
-   - `frontend/i8n/vi.ts` (Vietnamese, default)
-   - `frontend/i8n/en.ts` (English)
-2. **STRICTLY NO INLINE i18n ON PAGES/COMPONENTS**: Absolutely NEVER resolve messages or handle translations directly inside page or component JSX using ternary operators (e.g., `isEn ? "..." : "..."`, `currentLocale === "en" ? ... : ...`, `lang === "vi" ? ... : ...`) or hardcoded strings. Every translation key MUST be declared in `frontend/i8n/`.
+1. **Centralized Message Repository**: All user-visible messages and translations MUST be defined in the `web/i8n/` directory:
+   - `web/i8n/vi.ts` (Vietnamese, default)
+   - `web/i8n/en.ts` (English)
+2. **STRICTLY NO INLINE i18n ON PAGES/COMPONENTS**: Absolutely NEVER resolve messages or handle translations directly inside page or component JSX using ternary operators (e.g., `isEn ? "..." : "..."`, `currentLocale === "en" ? ... : ...`, `lang === "vi" ? ... : ...`) or hardcoded strings. Every translation key MUST be declared in `web/i8n/`.
 3. **Usage via Hook**: Always import and use `useTranslations` from `@/context/LanguageContext`:
    ```tsx
    import { useTranslations } from "@/context/LanguageContext";
@@ -203,7 +203,7 @@ Whenever creating or modifying **any frontend page, component, or layout**:
    - Never throw plain ad-hoc error strings without a typed error code.
    - All codes and exception messages must be strictly in English.
 2. **Frontend Translation**:
-   - Every `BusinessErrorCode` MUST have matching localization strings in `frontend/i8n/vi/errors.ts` and `frontend/i8n/en/errors.ts`.
+   - Every `BusinessErrorCode` MUST have matching localization strings in `web/i8n/vi/errors.ts` and `web/i8n/en/errors.ts`.
    - Never inspect error messages on the client using `message.includes(...)` or regex matching.
    - Always use `resolveErrorMessage(err, tErrors, fallbackMessage)` from `@/utils` to guarantee fully localized display strings.
 
@@ -212,7 +212,7 @@ Whenever creating or modifying **any frontend page, component, or layout**:
 ## Language Rules
 
 - **Backend (NestJS)**: All code, comments, log messages, error codes, DTO field names, Swagger `@ApiOperation` summaries/descriptions, `@ApiProperty` descriptions, and `@ApiResponse` descriptions MUST be written in **English**.
-- **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `useTranslations` from `frontend/i8n/` (`vi.ts`, `en.ts`) — **never inline ternary operators or hardcoded in source files**.
+- **Frontend (Next.js)**: All source code (variables, functions, components, hooks, types) MUST be in **English**. User-visible strings MUST be served via `useTranslations` from `web/i8n/` (`vi.ts`, `en.ts`) — **never inline ternary operators or hardcoded in source files**.
 - **Spec documents** (`docs/spec/*.md`): Vietnamese is acceptable since they target internal stakeholders.
 - **This rules file and AGENTS.md files**: English.
 
@@ -244,7 +244,7 @@ Every frontend page, layout, modal, and component MUST strictly satisfy the foll
 
 4. **100% Centralized i18n (Rule #14)**:
    - Strictly NO inline ternaries (`isEn ? "..." : "..."`) and NO hardcoded user-visible strings in JSX.
-   - Every single user-facing label, button, placeholder, error, toast, tooltip, empty state title/desc must be declared in both `frontend/i8n/vi/` and `frontend/i8n/en/` and accessed via `useTranslations(namespace)`.
+   - Every single user-facing label, button, placeholder, error, toast, tooltip, empty state title/desc must be declared in both `web/i8n/vi/` and `web/i8n/en/` and accessed via `useTranslations(namespace)`.
 
 5. **Explicit Loading & Empty States**:
    - Every asynchronous page, tab, list, table, and modal MUST render polished loading states (skeletons or spinners with status text) while fetching data.
@@ -262,8 +262,8 @@ Every frontend page, layout, modal, and component MUST strictly satisfy the foll
 - Do NOT let `00000000` remain as a permanent password — check `mustChangePassword` on login.
 - Do NOT insert a new `DEPOSIT` when converting platform deposit to contract — update the existing row.
 - Do NOT generate `POST` when landlord uses AI draft — create only on explicit publish action.
-- Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `backend/`.
-- Do NOT handle i18n messages directly on pages/components using inline ternary operators (e.g., `isEn ? ... : ...`) or hardcoded strings — all translations MUST be defined in `frontend/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations`.
+- Do NOT write Vietnamese in backend code, comments, log messages, or Swagger docs — English only in `api/`.
+- Do NOT handle i18n messages directly on pages/components using inline ternary operators (e.g., `isEn ? ... : ...`) or hardcoded strings — all translations MUST be defined in `web/i8n/` (`vi.ts`, `en.ts`) and accessed via `useTranslations`.
 - Do NOT bypass the platform's central payOS gateway for financial transactions — all monetary payments (invoices, platform deposits, subscriptions, post purchases) MUST go through payOS.
 - Do NOT throw ad-hoc domain errors without a typed `BusinessErrorCode` in backend, and do NOT parse client error strings with `.includes(...)` in frontend — always use `BusinessException` and `resolveErrorMessage()`.
 - Do NOT use `isPrimary` on tenant contracts — all co-tenants share equal rights and permissions.

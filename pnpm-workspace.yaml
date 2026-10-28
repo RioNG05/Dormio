@@ -1,6 +1,6 @@
 packages:
-  - 'backend'
-  - 'frontend'
+  - 'api'
+  - 'web'
 
 allowBuilds:
   '@prisma/engines': true
