@@ -56,3 +56,12 @@ BEGIN
         ALTER TABLE "asset_maintenance_logs" ADD CONSTRAINT "asset_maintenance_logs_boarding_house_id_fkey" FOREIGN KEY ("boarding_house_id") REFERENCES "boarding_houses"("id") ON DELETE CASCADE ON UPDATE CASCADE;
     END IF;
 END $$;
+
+-- Seed default subscription plans if missing
+INSERT INTO "subscription_plans" ("plan_name", "daily_post_quote", "price_monthly", "price_quarterly", "price_yearly", "max_room", "description", "created_at", "updated_at")
+VALUES
+    ('free', 0, 0, 0, 0, 10, 'Gói miễn phí cho chủ nhà nhỏ dưới 10 phòng', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('plus', 5, 199000, 537000, 1990000, 30, 'Gói tiêu chuẩn cho chủ trọ từ 10 - 50 phòng', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+    ('pro', 10, 499000, 1347000, 4990000, 999999, 'Gói chuyên nghiệp không giới hạn tính năng cho hệ thống chuỗi phòng trọ', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+ON CONFLICT ("plan_name") DO NOTHING;
+

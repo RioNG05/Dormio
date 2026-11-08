@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, use } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Crown,
   Check,
@@ -68,15 +68,47 @@ function getQrImageUrl(data: SubscriptionCheckoutResponse | null): string {
   )}`
 }
 
-interface PageProps {
-  searchParams: Promise<{
-    pack?: string
-  }>
+const DEFAULT_FALLBACK_PLANS: Record<'plus' | 'pro', SubscriptionPlanItem> = {
+  plus: {
+    planName: 'plus',
+    priceMonthly: 199000,
+    priceQuarterly: 537000,
+    priceYearly: 1990000,
+    maxRoom: 30,
+    dailyPostQuote: 5,
+    description: 'Gói tiêu chuẩn cho chủ trọ từ 10 - 50 phòng',
+    features: [
+      'Quản lý tối đa 30 phòng',
+      '5 lượt đăng tin / ngày',
+      'Báo cáo doanh thu & công nợ chuyên sâu',
+      'Phân quyền nhân viên & lịch làm việc',
+      'Tính toán tiền điện nước tự động',
+    ],
+  },
+  pro: {
+    planName: 'pro',
+    priceMonthly: 499000,
+    priceQuarterly: 1347000,
+    priceYearly: 4990000,
+    maxRoom: 100,
+    dailyPostQuote: 10,
+    description: 'Gói chuyên nghiệp không giới hạn tính năng cho hệ thống chuỗi phòng trọ',
+    features: [
+      'Quản lý tối đa 100 phòng',
+      '20 lượt đăng tin VIP / ngày',
+      'Toàn bộ tính năng cao cấp không giới hạn',
+      'Hỗ trợ ưu tiên 24/7 từ chuyên viên Dormio',
+      'Tùy chỉnh biểu mẫu hợp đồng riêng biệt',
+    ],
+  },
 }
 
-function PricingCheckoutPageInner({ searchParams }: PageProps) {
-  const resolvedParams = use(searchParams)
-  const planParam = (resolvedParams.pack || '').toLowerCase() as 'plus' | 'pro'
+function PricingCheckoutPageInner() {
+  const searchParams = useSearchParams()
+  const rawPack = (searchParams.get('pack') || 'plus').toLowerCase()
+  const planParam = (rawPack === 'pro' ? 'pro' : rawPack === 'plus' ? 'plus' : rawPack) as
+    | 'plus'
+    | 'pro'
   const router = useRouter()
   const { user, isLoggedIn, isHydrating } = useAuth()
   const { locale } = useLanguage()
@@ -139,10 +171,18 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
   // 1. Fetch Plan Details and Tier Status
   const loadPageData = useCallback(async () => {
     if (!user) return
+    if (planParam !== 'plus' && planParam !== 'pro') {
+      setCurrentPlan(null)
+      setIsLoading(false)
+      return
+    }
+
     setIsLoading(true)
     try {
       const allPlans = await subscriptionService.getPlans()
-      const targetPlan = allPlans.find(p => p.planName.toLowerCase() === planParam)
+      const targetPlan =
+        allPlans.find(p => p.planName.toLowerCase() === planParam) ||
+        DEFAULT_FALLBACK_PLANS[planParam]
       if (targetPlan) {
         setCurrentPlan(targetPlan)
       }
@@ -810,10 +850,18 @@ function PricingCheckoutPageInner({ searchParams }: PageProps) {
 }
 
 // ─── Exported page wrapped with IdentityGuard ─────────────────────────────────
-export default function PricingCheckoutPage({ searchParams }: PageProps) {
+export default function PricingCheckoutPage() {
   return (
     <IdentityGuard>
-      <PricingCheckoutPageInner searchParams={searchParams} />
+      <React.Suspense
+        fallback={
+          <div className="min-h-screen flex items-center justify-center">
+            <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+          </div>
+        }
+      >
+        <PricingCheckoutPageInner />
+      </React.Suspense>
     </IdentityGuard>
   )
 }

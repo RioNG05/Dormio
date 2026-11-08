@@ -22,10 +22,54 @@ export class SubscriptionsService {
   ) {}
 
   /**
+   * Ensure default subscription plans exist in the database
+   */
+  private async ensureDefaultPlansExist(): Promise<void> {
+    const count = await this.prisma.subscriptionPlan.count()
+    if (count >= 3) return
+
+    this.logger.log('Ensuring default subscription plans (free, plus, pro) exist in database')
+    await this.prisma.subscriptionPlan.createMany({
+      data: [
+        {
+          planName: 'free' as any,
+          dailyPostQuote: 0,
+          priceMonthly: 0,
+          priceQuarterly: 0,
+          priceYearly: 0,
+          maxRoom: 10,
+          description: 'Gói miễn phí cho chủ nhà nhỏ dưới 10 phòng',
+        },
+        {
+          planName: 'plus' as any,
+          dailyPostQuote: 5,
+          priceMonthly: 199000,
+          priceQuarterly: 537000,
+          priceYearly: 1990000,
+          maxRoom: 30,
+          description: 'Gói tiêu chuẩn cho chủ trọ từ 10 - 50 phòng',
+        },
+        {
+          planName: 'pro' as any,
+          dailyPostQuote: 10,
+          priceMonthly: 499000,
+          priceQuarterly: 1347000,
+          priceYearly: 4990000,
+          maxRoom: 999999,
+          description: 'Gói chuyên nghiệp không giới hạn tính năng cho hệ thống chuỗi phòng trọ',
+        },
+      ],
+      skipDuplicates: true,
+    })
+  }
+
+  /**
    * Get all subscription plans with pricing and feature matrix
    */
   async getPlans(): Promise<SubscriptionPlanItemDto[]> {
     this.logger.log('Fetching all subscription plans')
+
+    await this.ensureDefaultPlansExist()
 
     const plans = await this.prisma.subscriptionPlan.findMany({
       orderBy: { priceMonthly: 'asc' },
@@ -163,6 +207,8 @@ export class SubscriptionsService {
     this.logger.log(
       `Initiating subscription checkout for user ${userId}: ${dto.planName} (${dto.billingCycle})`,
     )
+
+    await this.ensureDefaultPlansExist()
 
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { planName: dto.planName as any },
