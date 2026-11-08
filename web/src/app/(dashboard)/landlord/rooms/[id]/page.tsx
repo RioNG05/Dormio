@@ -725,6 +725,54 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
     }
   }
 
+  // Generate 24 most recent months relative to current month
+  const recent24Months = useMemo(() => {
+    const list: Array<{ value: string; label: string }> = []
+    const now = new Date()
+    for (let i = 0; i < 24; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const y = d.getFullYear()
+      const formattedMonthYear = `${m}/${y}`
+      const periodValue = `Tháng ${formattedMonthYear}`
+      const label =
+        i === 0
+          ? t('landlordRoomDetailFilterCurrentMonth', { month: formattedMonthYear })
+          : t('landlordRoomDetailFilterMonth', { month: formattedMonthYear })
+      list.push({
+        value: periodValue,
+        label,
+      })
+    }
+    return list
+  }, [t])
+
+  // Aggregate available period options (All months + 24 recent months + any older periods from history)
+  const periodFilterOptions = useMemo(() => {
+    const options: Array<{ value: string; label: string }> = [
+      { value: 'all', label: t('landlordRoomDetailFilterAllMonths') },
+      ...recent24Months,
+    ]
+
+    const existingValues = new Set(options.map(o => o.value))
+
+    meterHistory.forEach(m => {
+      if (m.period && !existingValues.has(m.period)) {
+        existingValues.add(m.period)
+        options.push({ value: m.period, label: m.period })
+      }
+    })
+
+    invoicesHistory.forEach(inv => {
+      if (inv.period && !existingValues.has(inv.period)) {
+        existingValues.add(inv.period)
+        options.push({ value: inv.period, label: inv.period })
+      }
+    })
+
+    return options
+  }, [recent24Months, meterHistory, invoicesHistory, t])
+
   if (!isMounted || isLoading) {
     return (
       <div className="space-y-6 animate-pulse p-4">
@@ -848,54 +896,6 @@ export default function RoomDetailPage({ params }: { params: Promise<{ id: strin
         hasContract: true,
         contractId: currentContract?.id,
       }))
-
-  // Generate 24 most recent months relative to current month
-  const recent24Months = useMemo(() => {
-    const list: Array<{ value: string; label: string }> = []
-    const now = new Date()
-    for (let i = 0; i < 24; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const m = String(d.getMonth() + 1).padStart(2, '0')
-      const y = d.getFullYear()
-      const formattedMonthYear = `${m}/${y}`
-      const periodValue = `Tháng ${formattedMonthYear}`
-      const label =
-        i === 0
-          ? t('landlordRoomDetailFilterCurrentMonth', { month: formattedMonthYear })
-          : t('landlordRoomDetailFilterMonth', { month: formattedMonthYear })
-      list.push({
-        value: periodValue,
-        label,
-      })
-    }
-    return list
-  }, [t])
-
-  // Aggregate available period options (All months + 24 recent months + any older periods from history)
-  const periodFilterOptions = useMemo(() => {
-    const options: Array<{ value: string; label: string }> = [
-      { value: 'all', label: t('landlordRoomDetailFilterAllMonths') },
-      ...recent24Months,
-    ]
-
-    const existingValues = new Set(options.map(o => o.value))
-
-    meterHistory.forEach(m => {
-      if (m.period && !existingValues.has(m.period)) {
-        existingValues.add(m.period)
-        options.push({ value: m.period, label: m.period })
-      }
-    })
-
-    invoicesHistory.forEach(inv => {
-      if (inv.period && !existingValues.has(inv.period)) {
-        existingValues.add(inv.period)
-        options.push({ value: inv.period, label: inv.period })
-      }
-    })
-
-    return options
-  }, [recent24Months, meterHistory, invoicesHistory, t])
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
