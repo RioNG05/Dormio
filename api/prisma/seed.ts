@@ -1802,25 +1802,6 @@ async function main() {
       data: { refundPaymentId: refundPayment.id },
     });
   }
-
-  console.log('✅ Database seeding completed successfully!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔑 ADMIN CREDENTIALS (Password: 88888888 for all):');
-  console.log('   1. Nguyễn Quang Huy    | Phone: 0353563279 | Email: ngquanghuy.work@gmail.com');
-  console.log('   2. Nguyễn Thảo Linh    | Phone: 0836160161 | Email: nguyenthaolinhml@gmail.com');
-  console.log('   3. Đồng Ngọc Gia Bảo   | Phone: 0925502116 | Email: baodnghe181000@fpt.edu.vn');
-  console.log('   4. Phạm Vân Anh        | Phone: 0967013046 | Email: shinanhh@gmail.com');
-  console.log('   5. Nguyễn Thị Cẩm Tú   | Phone: 0364599095 | Email: nguyenthicamtu.alicia@gmail.com');
-  console.log('   6. Mai Tiến Đạt        | Phone: 0877719305 | Email: maidat217@gmail.com');
-  console.log('   Properties: 2 Boarding Houses (40 rooms total: 20 common, 20 duplex)');
-  console.log('────────────────────────────────────────────────────────────────');
-  console.log('👷 STAFF CREDENTIALS:');
-  console.log('   Email:     bao.pham@dormio.vn');
-  console.log('   Phone:     0901122334');
-  console.log('   Password:  Secret@123');
-  console.log('   Role:      employee');
-  console.log('   Assignment: Quản lý toà nhà (Dormio Premier Quận 1)');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
 main()
